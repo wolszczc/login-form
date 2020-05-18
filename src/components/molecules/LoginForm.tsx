@@ -3,11 +3,17 @@ import { styled } from "@material-ui/core/styles";
 import TextField from "@material-ui/core/TextField";
 import FormControl from "@material-ui/core/FormControl";
 import Button from "@material-ui/core/Button";
+import Alert from "@material-ui/lab/Alert";
 import { validator, EMAIL_RULES, PASSWORD_RULES } from "../../lib/validator";
 import { createContainer } from "unstated-next";
+import { login } from "../../lib/api";
+import { useAuthContainer } from "../../lib/auth";
+import { getErrorMessage } from "../../lib/error";
+import { useHistory } from "react-router";
 
 const SForm = styled("form")({ minWidth: 300 });
 const SButton = styled(Button)({ marginTop: 20 });
+const SAlert = styled(Alert)({ marginTop: 20 });
 
 const handleChange = (setter: React.Dispatch<React.SetStateAction<string>>) => (
   event: React.ChangeEvent<HTMLInputElement>,
@@ -17,6 +23,7 @@ const useValidator = () => {
   const [isValid, setIsValid] = useState(false);
   const [emailError, setEmailError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
+  const [authError, setAuthError] = useState("");
 
   useEffect(() => setIsValid(emailError && passwordError), [
     emailError,
@@ -29,6 +36,8 @@ const useValidator = () => {
     setEmailError,
     passwordError,
     setPasswordError,
+    authError,
+    setAuthError,
   };
 };
 
@@ -111,11 +120,22 @@ const InputPassword: React.FC = () => {
 };
 
 const ButtonSubmit: React.FC = () => {
+  const { push } = useHistory();
+  const { setIsAuthenticated } = useAuthContainer();
   const { email, password } = useFormContainer();
-  const { isValid } = useValidationContainer();
-  const handleClick = () => {
-    console.log(email, password);
+  const { isValid, setAuthError } = useValidationContainer();
+
+  const handleClick = async () => {
+    const { data } = await login({ email, password });
+    if (data.status === "SUCCESS") {
+      setIsAuthenticated(true);
+      setAuthError("");
+      push("/dashboard");
+    } else if (data.status === "ERROR") {
+      setAuthError(getErrorMessage(data.code));
+    }
   };
+
   return (
     <SButton
       disabled={!isValid}
@@ -128,12 +148,23 @@ const ButtonSubmit: React.FC = () => {
   );
 };
 
+const Error: React.FC = () => {
+  const { authError } = useValidationContainer();
+
+  return authError.length === 0 ? (
+    <></>
+  ) : (
+    <SAlert severity="error">{authError}</SAlert>
+  );
+};
+
 const Form: React.FC = () => {
   return (
     <SForm>
       <InputEmail />
       <InputPassword />
       <ButtonSubmit />
+      <Error />
     </SForm>
   );
 };

@@ -2,7 +2,7 @@ import React from "react";
 import FluidGrid from "../atoms/FluidGrid";
 import Container from "@material-ui/core/Container";
 import Grid from "@material-ui/core/Grid";
-import Form from "../molecules/Form";
+import LoginForm from "../molecules/LoginForm";
 
 const Login = () => {
   return (
@@ -10,7 +10,7 @@ const Login = () => {
       <FluidGrid>
         <Grid item>
           <h1>Login</h1>
-          <Form />
+          <LoginForm />
         </Grid>
       </FluidGrid>
     </Container>
